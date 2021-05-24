@@ -1,90 +1,42 @@
-/*
-  This JS is from the following project:
-  https://github.com/bushblade/Full-Screen-Touch-Slider
-*/
+let weather = {
+    apiKey: "c9a3542cf03746e8c08e223d4225981d",
+    fetchWeather:function(city){
+        fetch(
+            "http://api.openweathermap.org/data/2.5/weather?q=" 
+            + city 
+            +"&appid=" 
+            + this.apiKey
+            ).then((response) => response.json())
+            .then((data) => this.displayWeather(data))
+    },
+    displayWeather: function(data){
+        const { name } = data;
+        const { icon, description } = data.weather[0];
+        const { temp, humidity } = data.main;
+        const { speed} = data.wind;
+        document.querySelector(".city").innerText = "ამინდი " + name
+        document.querySelector(".icon").src = "https://openweathermap.org/img/wn/"+ icon +".png"
+        document.querySelector(".description").innerText = description;
+        document.querySelector(".temp").innerText = temp + "°C"
+        document.querySelector(".humidity").innerText = "ტენიანობა: " + humidity + "%";
+        document.querySelector(".wind").innerText = "ქარის სისწრაფე: " + speed + "კმ/ს";
+        document.body.style.backgroundImage =   "url('https://source.unsplash.com/1600x900/?" + name + "')";
+   
+    },
+    search: function () {
+        this.fetchWeather(document.querySelector(".search-bar").value);
+      },
 
-const slider = document.querySelector('.slider-container'),
-  slides = Array.from(document.querySelectorAll('.slide'))
+}
 
-let isDragging = false,
-  startPos = 0,
-  currentTranslate = 0,
-  prevTranslate = 0,
-  animationID = 0,
-  currentIndex = 0
-
-slides.forEach((slide, index) => {
-  const slideImage = slide.querySelector('img')
-  slideImage.addEventListener('dragstart', (e) => e.preventDefault())
-
-  // Touch events
-  slide.addEventListener('touchstart', touchStart(index))
-  slide.addEventListener('touchend', touchEnd)
-  slide.addEventListener('touchmove', touchMove)
-
-  // Mouse events
-  slide.addEventListener('mousedown', touchStart(index))
-  slide.addEventListener('mouseup', touchEnd)
-  slide.addEventListener('mouseleave', touchEnd)
-  slide.addEventListener('mousemove', touchMove)
+document.querySelector(".search button").addEventListener("click", function(){
+    weather.search()
 })
 
-// Disable context menu
-window.oncontextmenu = function (event) {
-  event.preventDefault()
-  event.stopPropagation()
-  return false
-}
+document.querySelector(".search-bar").addEventListener("keyup", function (event) {
+    if (event.key == "Enter") {
+      weather.search();
+    }
+  });
 
-function touchStart(index) {
-  return function (event) {
-    currentIndex = index
-    startPos = getPositionX(event)
-    isDragging = true
-
-    // https://css-tricks.com/using-requestanimationframe/
-    animationID = requestAnimationFrame(animation)
-    slider.classList.add('grabbing')
-  }
-}
-
-function touchEnd() {
-  isDragging = false
-  cancelAnimationFrame(animationID)
-
-  const movedBy = currentTranslate - prevTranslate
-
-  if (movedBy < -100 && currentIndex < slides.length - 1) currentIndex += 1
-
-  if (movedBy > 100 && currentIndex > 0) currentIndex -= 1
-
-  setPositionByIndex()
-
-  slider.classList.remove('grabbing')
-}
-
-function touchMove(event) {
-  if (isDragging) {
-    const currentPosition = getPositionX(event)
-    currentTranslate = prevTranslate + currentPosition - startPos
-  }
-}
-
-function getPositionX(event) {
-  return event.type.includes('mouse') ? event.pageX : event.touches[0].clientX
-}
-
-function animation() {
-  setSliderPosition()
-  if (isDragging) requestAnimationFrame(animation)
-}
-
-function setSliderPosition() {
-  slider.style.transform = `translateX(${currentTranslate}px)`
-}
-
-function setPositionByIndex() {
-  currentTranslate = currentIndex * -window.innerWidth
-  prevTranslate = currentTranslate
-  setSliderPosition()
-}
+weather.fetchWeather("Kutaisi");
